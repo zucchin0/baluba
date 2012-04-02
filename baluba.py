@@ -15,6 +15,8 @@ class giocatore:
 
 class baluba:
     def __init__ ( self ):
+        self.giocatori = {}
+        self.convocati = []
         pass
 
     def zeri ( self, s ):
@@ -46,8 +48,40 @@ class baluba:
                 print self.to_binany ( s ),
                 print
 
+    def carica_giocatori ( self, filename ):
+        f = open ( filename, "r" )
+        lines = f.readlines ()
+        f.close ()
+        for line in lines:
+            line = line.strip ()
+            if len ( line ) > 0:
+                self.giocatori [ line ] = giocatore ( line )
+
+    def carica_convocati ( self, filename ):
+        f = open ( filename, "r" )
+        lines = f.readlines ()
+        f.close ()
+        for line in lines:
+            line = line.strip ()
+            if len ( line ) > 0:
+                self.convocati.append ( line )
+
+    def stampa_giocatori ( self ):
+        for k, giocatore in self.giocatori.iteritems ():
+            print "%s: %s" % ( k, giocatore.nome )
+
+    def stampa_convocati ( self ):
+        for convocato in self.convocati:
+            print convocato
+
 if __name__ == "__main__":
-    print "balula"
+    print "+--------+"
+    print "| baluba |"
+    print "+--------+"
     baluba = baluba ()
-    baluba.print_furme ()
+    #baluba.print_furme ()
+    baluba.carica_giocatori ( "giocatori.txt" )
+    baluba.carica_convocati ( "convocati.txt" )
+    #baluba.stampa_giocatori ()
+    baluba.stampa_convocati ()
 
