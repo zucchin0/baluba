@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys
+
 #struct giocatore
 #{
 #    int attacco;
@@ -9,65 +11,78 @@
 #    int portiere;
 #};
 
-class giocatore:
+class Configs ( object ):
+    nconvocati = 10
+    nparametri = 5
+    
+class giocatore ( object ):
     def __init__ ( self, parametri ):
         self.parametri = parametri
 
-class baluba:
-    def __init__ ( self ):
-        self.giocatori = {}
-        self.convocati = []
-        self.nparametri = 5
-        self.nconvocati = 10
-        self.formazioni = []
-        pass
+class vincolo ( object ):
+    def __init__ ( self, valore ):
+        self.valore = valore
 
-    def zeri ( self, s ):
+class formazione ( object ):
+    def __init__ ( self, valore ):
+        self.valore = valore
+        self.valutazione = sys.maxint
+
+    def zeri ( self ):
         z = 0
-
-        for i in xrange ( 0, self.nconvocati ):
-            if ( not ( s & ( 1 << i ) ) ):
-                z+=1
+        for i in xrange ( 0, Configs.nconvocati ):
+            if ( not ( self.valore & ( 1 << i ) ) ):
+                z += 1
         return z
 
-    def to_binany ( self, s ):
+    def to_binany ( self ):
         binary = ''
-
-        for i in xrange ( 0, self.nconvocati ):
-            if ( s & ( 1 << self.nconvocati - 1 - i ) ):
+        for i in xrange ( 0, Configs.nconvocati ):
+            if ( self.valore & ( 1 << Configs.nconvocati - 1 - i ) ):
                 c = '1'
             else:
                 c = '0'
-
             binary = binary + c
         return binary
 
-    def is_on_team ( self, formazione, igiocatore, team ):
-        bit = ( formazione >> ( self.nconvocati - 1 - igiocatore ) ) & 1
+    def is_on_team ( self, igiocatore, team ):
+        bit = ( self.valore >> ( Configs.nconvocati - 1 - igiocatore ) ) & 1
         return bit == team
 
-    def stampa_formazione ( self, formazione ):
-        for i in xrange ( 0, self.nconvocati ):
-            if self.is_on_team ( formazione, i, 0 ):
-                print self.convocati [ i ],
-        print "vs",
-        for i in xrange ( 0, self.nconvocati ):
-            if self.is_on_team ( formazione, i, 1 ):
-                print self.convocati [ i ],
-        print
+    def squadra ( self, squadra ):
+        s = []
+        for i in xrange ( 0, Configs.nconvocati ):
+            if self.is_on_team ( i, squadra ):
+                s.append ( i )
+        return s
+
+class baluba ( object ):
+    def __init__ ( self ):
+        self.giocatori = {}
+        self.convocati = []
+        self.formazioni = []
+        self.vincoli = []
+        pass
 
     def stampa_formazioni ( self ):
         for form in self.formazioni:
-            print form,
-            print "%04X" % ( form ),
-            print self.to_binany ( form ),
-            baluba.stampa_formazione ( form )
+            print form.valore,
+            print "%04X" % ( form.valore ),
+            print form.to_binany ( ),
+            for i in form.squadra ( 0 ):
+                print self.convocati [ i ],
+            print "vs",
+            for i in form.squadra ( 1 ):
+                print self.convocati [ i ],
+            print form.valutazione,
+            print
 
     def genera_formazioni ( self ):
-        for s in xrange ( 0, 512 ):
-            z = self.zeri ( s )
-            if ( z == 5 ):
-                self.formazioni.append ( s )
+        for val in xrange ( 0, ( 2 ** Configs.nconvocati ) / 2 ):
+            f = formazione ( val )
+            z = f.zeri ( )
+            if ( z == Configs.nconvocati / 2 ):
+                self.formazioni.append ( f )
 
     def carica_giocatori ( self, filename ):
         f = open ( filename, "r" )
@@ -78,7 +93,7 @@ class baluba:
             line = line.strip ()
             if len ( line ) > 0:
                 l = line.split ()
-                if ( len ( l ) == self.nparametri + 1 ):
+                if ( len ( l ) == Configs.nparametri + 1 ):
                     self.giocatori [ l [ 0 ] ] = giocatore ( l [ 1: ] )
                 else:
                     print "Errore alla riga %d, riconosciuti %d parametri" % ( nline, len ( l ) - 1 )
@@ -93,6 +108,20 @@ class baluba:
             if len ( line ) > 0:
                 self.convocati.append ( line )
 
+    def carica_vincoli ( self, filename ):
+        f = open ( filename, "r" )
+        lines = f.readlines ()
+        f.close ()
+        for line in lines:
+            line = line.strip ()
+            if len ( line ) > 0:
+                l = line.split ()
+                self.vincoli.append ( vincolo ( l ) )
+
+    def stampa_vincoli ( self ):
+        for vincolo in self.vincoli:
+            print vincolo.valore
+
     def stampa_giocatori ( self ):
         for k, giocatore in self.giocatori.iteritems ():
             print "%s: %s" % ( k, giocatore.parametri )
@@ -100,6 +129,20 @@ class baluba:
     def stampa_convocati ( self ):
         for convocato in self.convocati:
             print convocato
+
+    def valuta_formazioni ( self ):
+        for form in self.formazioni:
+            for i in form.squadra ( 0 ):
+                # self.convocati [ i ],
+                pass
+            for i in form.squadra ( 1 ):
+                # self.convocati [ i ],
+                pass
+            form.valutazione = 0
+
+    def applica_vincoli ( self ):
+        for form in self.formazioni:
+            pass
 
 if __name__ == "__main__":
     print "+--------+"
@@ -109,11 +152,19 @@ if __name__ == "__main__":
     #baluba.print_furme ()
     baluba.carica_giocatori ( "giocatori.txt" )
     baluba.carica_convocati ( "convocati.txt" )
+    baluba.carica_vincoli ( "vincoli.txt" )
     print "caricati %d giocatori" % ( len ( baluba.giocatori ) )
     #baluba.stampa_giocatori ()
     print "caricati %d convocati" % ( len ( baluba.convocati ) )
     #baluba.stampa_convocati ()
+    print "caricati %d vincoli" % ( len ( baluba.vincoli ) )
+    #baluba.stampa_vincoli ()
     print "genero le formazioni"
     baluba.genera_formazioni ()
-    #baluba.stampa_formazioni ()
+    print "applico i vincoli"
+    baluba.applica_vincoli ()
+    print "valuto le formazioni"
+    baluba.valuta_formazioni ()
+    print "stampo le formazioni"
+    baluba.stampa_formazioni ()
 
