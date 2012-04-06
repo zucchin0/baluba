@@ -45,14 +45,13 @@ class formazione ( object ):
             binary = binary + c
         return binary
 
-    def is_on_team ( self, igiocatore, team ):
-        bit = ( self.valore >> ( Configs.nconvocati - 1 - igiocatore ) ) & 1
-        return bit == team
+    def is_on_team ( self, igiocatore ):
+        return ( self.valore >> ( Configs.nconvocati - 1 - igiocatore ) ) & 1
 
     def squadra ( self, squadra ):
         s = []
         for i in xrange ( 0, Configs.nconvocati ):
-            if self.is_on_team ( i, squadra ):
+            if self.is_on_team ( i ) == squadra:
                 s.append ( i )
         return s
 
