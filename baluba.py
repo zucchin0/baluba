@@ -14,10 +14,11 @@ import sys
 class Configs ( object ):
     nconvocati = 10
     nparametri = 5
+    metodo = 'base'
     
 class giocatore ( object ):
     def __init__ ( self, parametri ):
-        self.parametri = parametri
+        self.parametri = [ eval ( par ) for par in parametri ]
 
 class vincolo ( object ):
     def __init__ ( self, tipo, parametri ):
@@ -28,6 +29,9 @@ class formazione ( object ):
     def __init__ ( self, valore ):
         self.valore = valore
         self.valutazione = sys.maxint
+
+    def __valutazione__ ( self ):
+        return self.valutazione 
 
     def zeri ( self ):
         z = 0
@@ -132,13 +136,30 @@ class baluba ( object ):
 
     def valuta_formazioni ( self ):
         for form in self.formazioni:
-            for i in form.squadra ( 0 ):
-                # self.convocati [ i ],
-                pass
-            for i in form.squadra ( 1 ):
-                # self.convocati [ i ],
-                pass
-            form.valutazione = 0
+            if Configs.metodo == 'base':
+                sq0 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
+                sq1 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
+                for igiocatore in form.squadra ( 0 ):
+                    g = self.giocatori [ self.convocati [ igiocatore ] ]
+                    for par in xrange ( 0, Configs.nparametri ):
+                        sq0 [ par ] += g.parametri [ par ]
+                for igiocatore in form.squadra ( 1 ):
+                    g = self.giocatori [ self.convocati [ igiocatore ] ]
+                    for par in xrange ( 0, Configs.nparametri ):
+                        sq1 [ par ] += g.parametri [ par ]
+                form.valutazione = 0
+                for val in sq0:
+                    form.valutazione += val
+                for val in sq1:
+                    form.valutazione -= val
+                if form.valutazione < 0:
+                    form.valutazione = -form.valutazione
+            else:
+                print "Metodo di valutazione '%s' sconosciuto" % ( Configs.metodo )
+                break
+
+    def ordina_formazioni ( self ):
+        self.formazioni.sort ( key = formazione.__valutazione__ )
 
     def applica_vincoli ( self ):
         f = []
@@ -164,7 +185,6 @@ if __name__ == "__main__":
     print "| baluba |"
     print "+--------+"
     baluba = baluba ()
-    #baluba.print_furme ()
     baluba.carica_giocatori ( "giocatori.txt" )
     baluba.carica_convocati ( "convocati.txt" )
     baluba.carica_vincoli ( "vincoli.txt" )
@@ -180,6 +200,8 @@ if __name__ == "__main__":
     baluba.applica_vincoli ()
     print "valuto le formazioni"
     baluba.valuta_formazioni ()
+    print "ordino le formazioni"
+    baluba.ordina_formazioni ()
     print "stampo le formazioni"
     baluba.stampa_formazioni ()
 
