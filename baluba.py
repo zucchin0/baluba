@@ -20,8 +20,9 @@ class giocatore ( object ):
         self.parametri = parametri
 
 class vincolo ( object ):
-    def __init__ ( self, valore ):
-        self.valore = valore
+    def __init__ ( self, tipo, parametri ):
+        self.tipo = tipo
+        self.parametri = parametri
 
 class formazione ( object ):
     def __init__ ( self, valore ):
@@ -115,7 +116,7 @@ class baluba ( object ):
             line = line.strip ()
             if len ( line ) > 0:
                 l = line.split ()
-                self.vincoli.append ( vincolo ( l ) )
+                self.vincoli.append ( vincolo ( l [ 0 ], l [ 1: ] ) )
 
     def stampa_vincoli ( self ):
         for vincolo in self.vincoli:
@@ -140,8 +141,23 @@ class baluba ( object ):
             form.valutazione = 0
 
     def applica_vincoli ( self ):
+        f = []
         for form in self.formazioni:
-            pass
+            for vincolo in self.vincoli:
+                r = True
+                if vincolo.tipo == 'vs':
+                    g1 = self.convocati.index ( vincolo.parametri [ 0 ] )
+                    g2 = self.convocati.index ( vincolo.parametri [ 1 ] )
+                    r = form.is_on_team ( g1 ) != form.is_on_team ( g2 )
+                elif vincolo.tipo == 'w':
+                    g1 = self.convocati.index ( vincolo.parametri [ 0 ] )
+                    g2 = self.convocati.index ( vincolo.parametri [ 1 ] )
+                    r = form.is_on_team ( g1 ) == form.is_on_team ( g2 )
+                if not r:
+                    break
+            else:
+                f.append ( form )
+        self.formazioni = f
 
 if __name__ == "__main__":
     print "+--------+"
