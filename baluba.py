@@ -147,11 +147,13 @@ class baluba ( object ):
                     g = self.giocatori [ self.convocati [ igiocatore ] ]
                     for par in xrange ( 0, Configs.nparametri ):
                         sq1 [ par ] += g.parametri [ par ]
-                form.valutazione = 0
+                val_sq0 = 0
+                val_sq1 = 0
                 for val in sq0:
-                    form.valutazione += val
+                    val_sq0 += val
                 for val in sq1:
-                    form.valutazione -= val
+                    val_sq1 += val
+                form.valutazione = val_sq0 - val_sq1
                 if form.valutazione < 0:
                     form.valutazione = -form.valutazione
             else:
