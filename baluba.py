@@ -13,7 +13,7 @@ import sys
 
 class Configs ( object ):
     nconvocati = 10
-    nparametri = 5
+    nparametri = 1
     metodo = 'base'
     
 class giocatore ( object ):
@@ -29,6 +29,8 @@ class formazione ( object ):
     def __init__ ( self, valore ):
         self.valore = valore
         self.valutazione = sys.maxint
+        self.f0 = sys.maxint
+        self.f1 = sys.maxint
 
     def __valutazione__ ( self ):
         return self.valutazione 
@@ -70,15 +72,17 @@ class baluba ( object ):
 
     def stampa_formazioni ( self ):
         for form in self.formazioni:
-            print form.valore,
-            print "%04X" % ( form.valore ),
-            print form.to_binany ( ),
+            #print form.valore,
+            #print "%04X" % ( form.valore ),
+            #print form.to_binany ( ),
             for i in form.squadra ( 0 ):
                 print self.convocati [ i ],
             print "vs",
             for i in form.squadra ( 1 ):
                 print self.convocati [ i ],
             print form.valutazione,
+            print form.f0,
+            print form.f1,
             print
 
     def genera_formazioni ( self ):
@@ -136,6 +140,8 @@ class baluba ( object ):
 
     def valuta_formazioni ( self ):
         for form in self.formazioni:
+            val_sq0 = 0
+            val_sq1 = 0
             if Configs.metodo == 'base':
                 sq0 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
                 sq1 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
@@ -147,18 +153,42 @@ class baluba ( object ):
                     g = self.giocatori [ self.convocati [ igiocatore ] ]
                     for par in xrange ( 0, Configs.nparametri ):
                         sq1 [ par ] += g.parametri [ par ]
-                val_sq0 = 0
-                val_sq1 = 0
                 for val in sq0:
                     val_sq0 += val
                 for val in sq1:
                     val_sq1 += val
                 form.valutazione = val_sq0 - val_sq1
+                print form.valore,
+                print val_sq0,
+                print val_sq1
+                if form.valutazione < 0:
+                    form.valutazione = -form.valutazione
+            elif Configs.metodo == 'square':
+                sq0 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
+                sq1 = [ 0 for i in xrange ( 0, Configs.nparametri ) ]
+                for igiocatore in form.squadra ( 0 ):
+                    g = self.giocatori [ self.convocati [ igiocatore ] ]
+                    for par in xrange ( 0, Configs.nparametri ):
+                        sq0 [ par ] += g.parametri [ par ]
+                for igiocatore in form.squadra ( 1 ):
+                    g = self.giocatori [ self.convocati [ igiocatore ] ]
+                    for par in xrange ( 0, Configs.nparametri ):
+                        sq1 [ par ] += g.parametri [ par ]
+                for val in sq0:
+                    val_sq0 += val * val
+                for val in sq1:
+                    val_sq1 += val * val
+                form.valutazione = val_sq0 - val_sq1
+                print form.valore,
+                print val_sq0,
+                print val_sq1
                 if form.valutazione < 0:
                     form.valutazione = -form.valutazione
             else:
                 print "Metodo di valutazione '%s' sconosciuto" % ( Configs.metodo )
                 break
+            form.f0 = val_sq0
+            form.f1 = val_sq1
 
     def ordina_formazioni ( self ):
         self.formazioni.sort ( key = formazione.__valutazione__ )
